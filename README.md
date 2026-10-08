@@ -12,12 +12,6 @@
 | **Department** | Senior Mechatronics |
 | **ROS distribution** | **ROS 2 Jazzy Jalisco** (Ubuntu 24.04, Python 3.12) |
 | **Packages** | `bicycle_sim`, `bicycle_control`, `track_environment` (all `ament_python`) |
-| **Track** | `track_environment/tracks/centerline_0.csv` — 1,001 waypoints, closed loop; 528.2 m is the summed polyline length of the CSV, while the distance actually driven per lap is ≈ 445 m (see [§6.5](#65-data-quality-notes-and-open-points)) |
-
-> **Honesty note.** Every implementation statement below was checked against the source code in this repository. The results section now contains **two clearly separated kinds of evidence**: (1) **ROS 2 simulation results** — 3 completed laps per controller (Lateral PID, Pure Pursuit, MPC) copied from the `lap_analyzer` console banners of real launches (raw text in [`docs/results/ros2_lap_analyzer_logs.txt`](docs/results/ros2_lap_analyzer_logs.txt)); these are the **primary results**; and (2) the earlier **offline, ROS-free replay** of the control loop (`tools/offline_benchmark.py`), kept only as a cross-check. The two are never mixed in a table row. The 3-lap aggregates of the ROS runs were **derived from the per-lap banners** (the `lap_summary.json` file itself was not supplied). Items that are unverified are marked ⚠️.
-
----
-
 ## Table of Contents
 
 1. [Project overview](#1-project-overview)
