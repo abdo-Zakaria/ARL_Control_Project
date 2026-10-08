@@ -1,2 +1,0 @@
-# ARL_Control_Project
-controlProject_ARL_MPC_PUREPURSUIT_LATERALPID
