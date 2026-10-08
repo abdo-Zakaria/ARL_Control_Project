@@ -8,7 +8,7 @@
 
 | | |
 |---|---|
-| **Student** | Abdalrhman Ahmed Zakaria *(name and department taken from the supplied study report — edit if needed)* |
+| **Student** | Abdalrhman Ahmed Zakaria |
 | **Department** | Senior Mechatronics |
 | **ROS distribution** | **ROS 2 Jazzy Jalisco** (Ubuntu 24.04, Python 3.12) |
 | **Packages** | `bicycle_sim`, `bicycle_control`, `track_environment` (all `ament_python`) |
