@@ -595,7 +595,7 @@ Lap times agree within 1.3 s for all three controllers and the controller rankin
 | M5.3 + M5.4 (20 %) | `pure_pursuit.py`, `mpc.py` | ✅ tests; ✅ 3 ROS 2 laps each; offline cross-check |
 | Milestone 6 (10 %) | Ackermann analysis, resource synthesis | 🟡 Ackermann only; ⚠️ Gazebo/MPPI not run |
 | Milestone 7 documentation and telemetry (10 %) | this README, analyzer topics and markers, ROS 2 lap banners | ✅ benchmark measured in ROS 2; ⚠️ `lap_summary.json` not supplied |
-| Milestone 8 video (5 %) | — | ⚠️ not recorded |
+| Milestone 8 video (5 %) | — | https://drive.google.com/drive/folders/1H6tG2lg1RjPsa1RHcwUSzVcHeZ00JBR8?usp=drive_link |
 
 ---
 
