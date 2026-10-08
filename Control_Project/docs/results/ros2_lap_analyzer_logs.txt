@@ -1,0 +1,68 @@
+Raw lap_analyzer console output of the ROS 2 (Jazzy) runs, copied verbatim as supplied by the student.
+Track: centerline_0.csv, target speed 4 m/s, 3 completed laps per controller.
+NOTE: the "Distance" line is cumulative since launch (total_distance is never reset by lap_analyzer.py).
+
+############################ pure pursuit ############################
+[lap_analyzer-4] ==================== LAP 1 COMPLETE ====================
+[lap_analyzer-4]   Lap time : 112.30 s   (best 112.30 s)
+[lap_analyzer-4]   CTE      : mean 0.054 m | RMS 0.083 m | max 0.352 m
+[lap_analyzer-4]   Speed    : mean 3.97 m/s | top 4.12 m/s
+[lap_analyzer-4]   Distance : 445.7 m
+[lap_analyzer-4] =========================================================
+[lap_analyzer-4] [INFO] [1791488830.891241618] [lap_analyzer]: 
+[lap_analyzer-4] ==================== LAP 2 COMPLETE ====================
+[lap_analyzer-4]   Lap time : 112.09 s   (best 112.09 s)
+[lap_analyzer-4]   CTE      : mean 0.057 m | RMS 0.087 m | max 0.336 m
+[lap_analyzer-4]   Speed    : mean 3.98 m/s | top 4.00 m/s
+[lap_analyzer-4]   Distance : 891.5 m
+[lap_analyzer-4] =========================================================
+[lap_analyzer-4] [INFO] [1791488942.896682433] [lap_analyzer]: 
+[lap_analyzer-4] ==================== LAP 3 COMPLETE ====================
+[lap_analyzer-4]   Lap time : 112.01 s   (best 112.01 s)
+[lap_analyzer-4]   CTE      : mean 0.057 m | RMS 0.086 m | max 0.382 m
+[lap_analyzer-4]   Speed    : mean 3.98 m/s | top 4.00 m/s
+[lap_analyzer-4]   Distance : 1336.9 m
+
+############################ mpc ############################
+[lap_analyzer-4] ==================== LAP 1 COMPLETE ====================
+[lap_analyzer-4]   Lap time : 120.70 s   (best 120.70 s)
+[lap_analyzer-4]   CTE      : mean 0.078 m | RMS 0.101 m | max 0.398 m
+[lap_analyzer-4]   Speed    : mean 3.69 m/s | top 4.07 m/s
+[lap_analyzer-4]   Distance : 445.4 m
+[lap_analyzer-4] =========================================================
+[lap_analyzer-4] [INFO] [1791490118.542929725] [lap_analyzer]: 
+[lap_analyzer-4] ==================== LAP 2 COMPLETE ====================
+[lap_analyzer-4]   Lap time : 119.70 s   (best 119.70 s)
+[lap_analyzer-4]   CTE      : mean 0.078 m | RMS 0.101 m | max 0.390 m
+[lap_analyzer-4]   Speed    : mean 3.72 m/s | top 4.06 m/s
+[lap_analyzer-4]   Distance : 890.9 m
+[lap_analyzer-4] =========================================================
+[lap_analyzer-4] [INFO] [1791490238.342962630] [lap_analyzer]: 
+[lap_analyzer-4] ==================== LAP 3 COMPLETE ====================
+[lap_analyzer-4]   Lap time : 119.80 s   (best 119.70 s)
+[lap_analyzer-4]   CTE      : mean 0.080 m | RMS 0.108 m | max 0.411 m
+[lap_analyzer-4]   Speed    : mean 3.72 m/s | top 4.09 m/s
+[lap_analyzer-4]   Distance : 1336.6 m
+[lap_analyzer-4] =========================================================
+
+############################ lateral_pid ############################
+[lap_analyzer-4] ==================== LAP 1 COMPLETE ====================
+[lap_analyzer-4]   Lap time : 117.80 s   (best 117.80 s)
+[lap_analyzer-4]   CTE      : mean 0.317 m | RMS 0.464 m | max 2.374 m
+[lap_analyzer-4]   Speed    : mean 3.96 m/s | top 4.12 m/s
+[lap_analyzer-4]   Distance : 467.4 m
+[lap_analyzer-4] =========================================================
+[lap_analyzer-4] [INFO] [1791490713.474297184] [lap_analyzer]: 
+[lap_analyzer-4] ==================== LAP 2 COMPLETE ====================
+[lap_analyzer-4]   Lap time : 116.90 s   (best 116.90 s)
+[lap_analyzer-4]   CTE      : mean 0.291 m | RMS 0.395 m | max 1.775 m
+[lap_analyzer-4]   Speed    : mean 3.98 m/s | top 4.00 m/s
+[lap_analyzer-4]   Distance : 932.2 m
+[lap_analyzer-4] =========================================================
+[lap_analyzer-4] [INFO] [1791490829.950848520] [lap_analyzer]: 
+[lap_analyzer-4] ==================== LAP 3 COMPLETE ====================
+[lap_analyzer-4]   Lap time : 116.40 s   (best 116.40 s)
+[lap_analyzer-4]   CTE      : mean 0.258 m | RMS 0.349 m | max 1.403 m
+[lap_analyzer-4]   Speed    : mean 3.98 m/s | top 4.00 m/s
+[lap_analyzer-4]   Distance : 1395.0 m
+[lap_analyzer-4] =========================================================

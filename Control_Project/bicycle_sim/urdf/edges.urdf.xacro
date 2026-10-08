@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+
+
+<robot name="edges_robot" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <xacro:include filename="racecar.xacro" />
+    <xacro:include filename="edges_gazebo.xacro" />
+    
+</robot>

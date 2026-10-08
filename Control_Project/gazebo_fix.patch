@@ -1,0 +1,140 @@
+--- a/bicycle_sim/bicycle_sim/gz_adapter.py
++++ b/bicycle_sim/bicycle_sim/gz_adapter.py
+@@ -1,6 +1,8 @@
++import math
++
+ import rclpy
+ from rclpy.node import Node
+-from std_msgs.msg import Float64
++from std_msgs.msg import Float32
+ from geometry_msgs.msg import Twist
+ 
+ class GazeboAdapter(Node):
+@@ -8,32 +10,36 @@
+         super().__init__('gz_adapter')
+         
+         # Subscribing to your controller's output topics
+-        self.throttle_sub = self.create_subscription(Float64, '/throttle', self.throttle_cb, 10)
+-        self.steer_sub = self.create_subscription(Float64, '/steer', self.steer_cb, 10)
++        self.throttle_sub = self.create_subscription(Float32, '/throttle', self.throttle_cb, 10)
++        self.steer_sub = self.create_subscription(Float32, '/steer', self.steer_cb, 10)
+         
+         # Publishing to Gazebo's Twist topic
+         self.cmd_pub = self.create_publisher(Twist, '/cmd_vel', 10)
+         
+         self.current_throttle = 0.0
+         self.current_steer = 0.0
++        self.v_cmd = 0.0                       # commanded speed [m/s], integrated like bicycle_model.py
++        self.dt = 0.05
++        self.create_timer(self.dt, self.publish_cmd)
+ 
+     def throttle_cb(self, msg):
+-        self.current_throttle = msg.data
+-        self.publish_cmd()
++        self.current_throttle = max(-1.0, min(1.0, msg.data))
+ 
+     def steer_cb(self, msg):
+-        self.current_steer = msg.data
+-        self.publish_cmd()
++        self.current_steer = max(-0.610865, min(0.610865, msg.data))
+ 
+     def publish_cmd(self):
++        # same longitudinal plant as bicycle_model.py: v_dot = k_a*u - (c_drag*v^2 + c_roll*v)
++        v = self.v_cmd
++        a = 4.0 * self.current_throttle - (0.005 * v * v + 0.05 * v)
++        self.v_cmd = min(max(v + a * self.dt, 0.0), 25.0)
++
+         twist_msg = Twist()
+-        # افتراض أن الـ throttle يعبر عن السرعة الخطية (m/s)
+-        twist_msg.linear.x = self.current_throttle 
+-        # افتراض أن الـ steer يعبر عن سرعة الدوران أو زاوية التوجيه
+-        twist_msg.angular.z = self.current_steer 
+-        
++        twist_msg.linear.x = self.v_cmd                                          # speed [m/s]
++        twist_msg.angular.z = self.v_cmd / 1.25 * math.tan(self.current_steer)   # YAW RATE [rad/s]
+         self.cmd_pub.publish(twist_msg)
+ 
++
+ def main(args=None):
+     rclpy.init(args=args)
+     node = GazeboAdapter()
+--- a/bicycle_sim/config/gazebo_bridge.yaml
++++ b/bicycle_sim/config/gazebo_bridge.yaml
+@@ -21,3 +21,9 @@
+   ros_type_name: "geometry_msgs/msg/Twist"
+   gz_type_name: "gz.msgs.Twist"
+   direction: ROS_TO_GZ
++
++- ros_topic_name: "/state"
++  gz_topic_name: "/model/edges_robot/odometry"
++  ros_type_name: "nav_msgs/msg/Odometry"
++  gz_type_name: "gz.msgs.Odometry"
++  direction: GZ_TO_ROS
+--- a/bicycle_sim/urdf/edges_gazebo.xacro
++++ b/bicycle_sim/urdf/edges_gazebo.xacro
+@@ -167,8 +167,6 @@
+       <max_velocity>${v_max}</max_velocity>
+       <min_acceleration>-8</min_acceleration>
+       <max_acceleration>6</max_acceleration>
+-      <topic>cmd_vel</topic>
+-      <odom_topic>odom</odom_topic>
+       <frame_id>odom</frame_id>
+       <child_frame_id>${g_base}</child_frame_id>
+       <odom_publish_frequency>50</odom_publish_frequency>
+@@ -177,7 +175,6 @@
+     <!-- Joint states for robot_state_publisher (wheel + steering angles) -->
+     <plugin filename="gz-sim-joint-state-publisher-system"
+             name="gz::sim::systems::JointStatePublisher">
+-      <topic>joint_states</topic>
+     </plugin>
+   </gazebo>
+ 
+--- a/bicycle_sim/launch/bicycle_sim.launch.py
++++ b/bicycle_sim/launch/bicycle_sim.launch.py
+@@ -608,6 +608,30 @@
+     )
+ 
+     # ============================================================
++    # /throttle,/steer -> Gazebo /cmd_vel   and   map -> odom
++    # ============================================================
++
++    start_gz_adapter = Node(
++        package='bicycle_sim',
++        executable='gz_adapter',
++        name='gz_adapter',
++        output='screen',
++        parameters=[{'use_sim_time': use_sim_time}],
++        # /cmd_vel is also teleop_bridge's input: keep the adapter out of teleop mode (feedback loop)
++        condition=IfCondition(
++            PythonExpression(["'", controller, "'.lower() != 'teleop'"])
++        )
++    )
++
++    start_map_to_odom = Node(
++        package='tf2_ros',
++        executable='static_transform_publisher',
++        name='map_to_odom',
++        arguments=['--frame-id', 'map', '--child-frame-id', 'odom'],
++        parameters=[{'use_sim_time': use_sim_time}]
++    )
++
++    # ============================================================
+     # SPAWN ROBOT
+     # ============================================================
+ 
+@@ -842,6 +866,7 @@
+         # --------------------------------------------------------
+ 
+         start_gazebo_bridge,
++        start_map_to_odom,
+ 
+         # --------------------------------------------------------
+         # 4. Spawn robot after Gazebo starts
+@@ -861,6 +886,7 @@
+         TimerAction(
+             period=5.0,
+             actions=[
++                start_gz_adapter,
+                 start_path_generator,
+                 start_lap_analyzer,
+                 start_rviz,

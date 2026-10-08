@@ -1,0 +1,465 @@
+# Archived verbatim from bicycle_sim.launch.py (Gazebo Harmonic variant, commented out).
+# Not installed or launched. See README, Milestone 6.
+
+
+# import os
+
+# from ament_index_python.packages import (
+#     get_package_share_directory,
+#     PackageNotFoundError
+# )
+
+# from launch import LaunchDescription
+# from launch.actions import (
+#     DeclareLaunchArgument,
+#     IncludeLaunchDescription,
+#     TimerAction
+# )
+# from launch.conditions import IfCondition
+# from launch.event_handlers import OnProcessExit
+# from launch.launch_description_sources import PythonLaunchDescriptionSource
+# from launch.substitutions import (
+#     LaunchConfiguration,
+#     Command,
+#     PathJoinSubstitution,
+#     PythonExpression
+# )
+# from launch_ros.actions import Node
+# from launch_ros.substitutions import FindPackageShare
+# from launch_ros.parameter_descriptions import ParameterValue
+
+
+# def generate_launch_description():
+
+#     # ============================================================
+#     # PACKAGE PATHS
+#     # ============================================================
+
+#     try:
+#         pkg_share = get_package_share_directory('bicycle_sim')
+#     except PackageNotFoundError:
+#         pkg_share = os.path.abspath(
+#             os.path.join(os.path.dirname(__file__), '..')
+#         )
+
+#     rviz_config = os.path.join(
+#         pkg_share,
+#         'bicycle.rviz'
+#     )
+
+#     # Use the same robot description structure as the Gazebo model
+#     urdf_file = os.path.join(
+#         pkg_share,
+#         'urdf',
+#         'edges.urdf.xacro'
+#     )
+
+#     # Bridge configuration
+#     # bridge_config_file = os.path.join(
+#     #     pkg_share,
+#     #     'gazebo_bridge.yaml'
+#     # )
+#     # تحديد مسار ملف الـ yaml بالطريقة الصحيحة باستخدام os.path
+#     pkg_share = FindPackageShare('bicycle_sim').find('bicycle_sim')
+#     bridge_config_file = os.path.join(
+#         pkg_share,
+#         'config',
+#         'gazebo_bridge.yaml'
+#     )
+    
+#     # bridge_config_file = PathJoinSubstitution([
+#     # FindPackageShare('bicycle_sim'),
+#     # 'config',
+#     # 'gazebo_bridge.yaml'])
+
+#     # Fallbacks for source-tree execution
+#     if not os.path.isfile(urdf_file):
+#         urdf_file = os.path.abspath(
+#             os.path.join(
+#                 os.path.dirname(__file__),
+#                 '..',
+#                 'urdf',
+#                 'edges.urdf.xacro'
+#             )
+#         )
+
+#     if not os.path.isfile(rviz_config):
+#         rviz_config = os.path.abspath(
+#             os.path.join(
+#                 os.path.dirname(__file__),
+#                 'bicycle.rviz'
+#             )
+#         )
+
+#     if not os.path.isfile(bridge_config_file):
+#         bridge_config_file = os.path.abspath(
+#             os.path.join(
+#                 os.path.dirname(__file__),
+#                 'gazebo_bridge.yaml'
+#             )
+#         )
+
+#     # ============================================================
+#     # LAUNCH CONFIGURATIONS
+#     # ============================================================
+
+#     use_rviz = LaunchConfiguration('rviz')
+#     track_file = LaunchConfiguration('track_file')
+#     trajectory_type = LaunchConfiguration('trajectory_type')
+#     controller = LaunchConfiguration('controller')
+#     use_analyzer = LaunchConfiguration('analyzer')
+#     use_cruise_control = LaunchConfiguration('use_cruise_control')
+
+#     use_sim_time = True
+
+#     # ============================================================
+#     # ROBOT DESCRIPTION
+#     # ============================================================
+
+#     robot_description = ParameterValue(
+#         Command(['xacro ', urdf_file]),
+#         value_type=str
+#     )
+
+#     # ============================================================
+#     # GAZEBO HARMONIC
+#     # ============================================================
+
+#     start_gazebo = IncludeLaunchDescription(
+#         PythonLaunchDescriptionSource(
+#             PathJoinSubstitution([
+#                 FindPackageShare('ros_gz_sim'),
+#                 'launch',
+#                 'gz_sim.launch.py'
+#             ])
+#         ),
+#         launch_arguments={
+#             'gz_args': 'empty.sdf -r'
+#         }.items()
+#     )
+
+#     # ============================================================
+#     # ROBOT STATE PUBLISHER
+#     # ============================================================
+
+#     start_robot_state_publisher = Node(
+#         package='robot_state_publisher',
+#         executable='robot_state_publisher',
+#         name='robot_state_publisher',
+#         output='screen',
+#         parameters=[
+#             {
+#                 'robot_description': robot_description,
+#                 'use_sim_time': use_sim_time
+#             }
+#         ]
+#     )
+
+#     # ============================================================
+#     # GAZEBO ROS BRIDGE
+#     # ============================================================
+
+#     start_gazebo_bridge = Node(
+#         package='ros_gz_bridge',
+#         executable='parameter_bridge',
+#         name='gazebo_bridge',
+#         output='screen',
+#         parameters=[
+#             {
+#                 'config_file': bridge_config_file,
+#                 'use_sim_time': use_sim_time
+#             }
+#         ]
+#     )
+
+#     # ============================================================
+#     # /throttle,/steer -> Gazebo /cmd_vel   and   map -> odom
+#     # ============================================================
+
+#     start_gz_adapter = Node(
+#         package='bicycle_sim',
+#         executable='gz_adapter',
+#         name='gz_adapter',
+#         output='screen',
+#         parameters=[{'use_sim_time': use_sim_time}],
+#         # /cmd_vel is also teleop_bridge's input: keep the adapter out of teleop mode (feedback loop)
+#         condition=IfCondition(
+#             PythonExpression(["'", controller, "'.lower() != 'teleop'"])
+#         )
+#     )
+
+#     start_map_to_odom = Node(
+#         package='tf2_ros',
+#         executable='static_transform_publisher',
+#         name='map_to_odom',
+#         arguments=['--frame-id', 'map', '--child-frame-id', 'odom'],
+#         parameters=[{'use_sim_time': use_sim_time}]
+#     )
+
+#     # ============================================================
+#     # SPAWN ROBOT
+#     # ============================================================
+
+#     spawn_robot = Node(
+#         package='ros_gz_sim',
+#         executable='create',
+#         name='spawn_robot',
+#         output='screen',
+#         arguments=[
+#             '-world', 'empty',
+#             '-topic', '/robot_description',
+#             '-name', 'edges_robot',
+#             '-x', '0.0',
+#             '-y', '0.0',
+#             '-z', '0.05'
+#         ]
+#     )
+
+#     # ============================================================
+#     # PATH GENERATOR
+#     # ============================================================
+
+#     start_path_generator = Node(
+#         package='track_environment',
+#         executable='path_gen',
+#         name='path_gen',
+#         output='screen',
+#         parameters=[
+#             {
+#                 'track_file': track_file,
+#                 'trajectory_type': trajectory_type,
+#                 'close_loop': True,
+#                 'use_sim_time': use_sim_time
+#             }
+#         ]
+#     )
+
+#     # ============================================================
+#     # LAP ANALYZER
+#     # ============================================================
+
+#     start_lap_analyzer = Node(
+#         package='track_environment',
+#         executable='lap_analyzer',
+#         name='lap_analyzer',
+#         output='screen',
+#         parameters=[
+#             {
+#                 'use_sim_time': use_sim_time
+#             }
+#         ],
+#         condition=IfCondition(use_analyzer)
+#     )
+
+#     # ============================================================
+#     # RVIZ2
+#     # ============================================================
+
+#     start_rviz = Node(
+#         package='rviz2',
+#         executable='rviz2',
+#         name='rviz2',
+#         output='screen',
+#         arguments=[
+#             '-d',
+#             rviz_config
+#         ],
+#         parameters=[
+#             {
+#                 'use_sim_time': use_sim_time
+#             }
+#         ],
+#         condition=IfCondition(use_rviz)
+#     )
+
+#     # ============================================================
+#     # CONTROLLER
+#     # ============================================================
+
+#     start_lateral_pid = Node(
+#         package='bicycle_control',
+#         executable='controller',
+#         name='controller',
+#         output='screen',
+#         parameters=[
+#             {
+#                 'control_mode': 'lateral_pid',
+#                 'target_speed': 4.0,
+#                 'velocity_mode': 'curvature',
+#                 'use_sim_time': use_sim_time
+#             }
+#         ],
+#         condition=IfCondition(
+#             PythonExpression([
+#                 "'",
+#                 controller,
+#                 "'.lower() == 'lateral_pid'"
+#             ])
+#         )
+#     )
+
+#     start_pure_pursuit = Node(
+#         package='bicycle_control',
+#         executable='controller',
+#         name='controller',
+#         output='screen',
+#         parameters=[
+#             {
+#                 'control_mode': 'pure_pursuit',
+#                 'target_speed': 4.0,
+#                 'velocity_mode': 'curvature',
+#                 'use_sim_time': use_sim_time
+#             }
+#         ],
+#         condition=IfCondition(
+#             PythonExpression([
+#                 "'",
+#                 controller,
+#                 "'.lower() == 'pure_pursuit'"
+#             ])
+#         )
+#     )
+
+#     start_mpc = Node(
+#         package='bicycle_control',
+#         executable='controller',
+#         name='controller',
+#         output='screen',
+#         parameters=[
+#             {
+#                 'control_mode': 'mpc',
+#                 'target_speed': 4.0,
+#                 'use_sim_time': use_sim_time
+#             }
+#         ],
+#         condition=IfCondition(
+#             PythonExpression([
+#                 "'",
+#                 controller,
+#                 "'.lower() == 'mpc'"
+#             ])
+#         )
+#     )
+
+#     # ============================================================
+#     # TELEOP
+#     # ============================================================
+
+#     start_teleop = Node(
+#         package='bicycle_control',
+#         executable='teleop_bridge',
+#         name='teleop_bridge',
+#         output='screen',
+#         parameters=[
+#             {
+#                 'use_cruise_control': use_cruise_control,
+#                 'use_sim_time': use_sim_time
+#             }
+#         ],
+#         condition=IfCondition(
+#             PythonExpression([
+#                 "'",
+#                 controller,
+#                 "'.lower() == 'teleop'"
+#             ])
+#         )
+#     )
+
+#     # ============================================================
+#     # LAUNCH DESCRIPTION
+#     # ============================================================
+
+#     return LaunchDescription([
+
+#         # --------------------------------------------------------
+#         # Launch arguments
+#         # --------------------------------------------------------
+
+#         DeclareLaunchArgument(
+#             'rviz',
+#             default_value='true',
+#             description='Launch RViz2 for visualization'
+#         ),
+
+#         DeclareLaunchArgument(
+#             'track_file',
+#             default_value='centerline_0.csv',
+#             description='CSV track file'
+#         ),
+
+#         DeclareLaunchArgument(
+#             'trajectory_type',
+#             default_value='centerline',
+#             description='Trajectory type: centerline, sp, or iqp'
+#         ),
+
+#         DeclareLaunchArgument(
+#             'controller',
+#             default_value='none',
+#             description=(
+#                 'Controller: none, lateral_pid, '
+#                 'pure_pursuit, mpc, teleop'
+#             )
+#         ),
+
+#         DeclareLaunchArgument(
+#             'analyzer',
+#             default_value='true',
+#             description='Launch lap analyzer and HUD'
+#         ),
+
+#         DeclareLaunchArgument(
+#             'use_cruise_control',
+#             default_value='false',
+#             description='Enable cruise control in teleop'
+#         ),
+
+#         # --------------------------------------------------------
+#         # 1. Gazebo
+#         # --------------------------------------------------------
+
+#         start_gazebo,
+
+#         # --------------------------------------------------------
+#         # 2. Robot State Publisher
+#         # --------------------------------------------------------
+
+#         start_robot_state_publisher,
+
+#         # --------------------------------------------------------
+#         # 3. Gazebo Bridge
+#         # --------------------------------------------------------
+
+#         start_gazebo_bridge,
+#         start_map_to_odom,
+
+#         # --------------------------------------------------------
+#         # 4. Spawn robot after Gazebo starts
+#         # --------------------------------------------------------
+
+#         TimerAction(
+#             period=3.0,
+#             actions=[
+#                 spawn_robot
+#             ]
+#         ),
+
+#         # --------------------------------------------------------
+#         # 5. Project nodes
+#         # --------------------------------------------------------
+
+#         TimerAction(
+#             period=5.0,
+#             actions=[
+#                 start_gz_adapter,
+#                 start_path_generator,
+#                 start_lap_analyzer,
+#                 start_rviz,
+
+#                 start_lateral_pid,
+#                 start_pure_pursuit,
+#                 start_mpc,
+#                 start_teleop
+#             ]
+#         )
+#     ])
